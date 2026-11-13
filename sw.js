@@ -1,24 +1,28 @@
-// 売店お助けFAQ：電波がなくても開けるようにするための仕組み
-// 内容を更新したら、下の版数（v1→v2…）を1つ上げてください。
-const CACHE = "baiten-faq-v1";
-const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
-
-self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+// 売店FAQ：船内iPadでオフライン時にも保存済みFAQを表示する。
+// 通信があるときはサーバー側の更新版を優先（公開のたびに版数変更は不要）。
+const CACHE="baiten-faq-staff-v2";
+const FILES=["./","./index.html","./faq-data.json","./manifest.webmanifest","./icon-192.png","./icon-512.png","./apple-touch-icon.png"];
+self.addEventListener("install",event=>{
+  event.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()));
 });
-self.addEventListener("activate", e => {
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+self.addEventListener("activate",event=>{
+  event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith("baiten-faq-")&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
 });
-// 電波があれば最新版を取りに行き、なければ（または3秒で返事がなければ）保存済みの版を表示
-self.addEventListener("fetch", e => {
-  const req = e.request;
-  if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
-  e.respondWith((async () => {
-    const cache = await caches.open(CACHE);
-    const cached = await cache.match(req, { ignoreSearch: true });
-    const net = fetch(req).then(res => { if (res && res.ok) cache.put(req, res.clone()); return res; });
-    if (!cached) return net.catch(() => cache.match("./index.html"));
-    const timeout = new Promise(r => setTimeout(() => r(cached), 3000));
-    return Promise.race([net.catch(() => cached), timeout]);
+self.addEventListener("fetch",event=>{
+  const req=event.request;
+  if(req.method!=="GET"||new URL(req.url).origin!==self.location.origin)return;
+  event.respondWith((async()=>{
+    const cache=await caches.open(CACHE);
+    const url=new URL(req.url);
+    const cacheKey=url.pathname.endsWith("/faq-data.json")?"./faq-data.json":req;
+    const saved=await cache.match(cacheKey,{ignoreSearch:true});
+    // ネットワーク取得が成功すればキャッシュ更新。3秒無応答なら保存済み版。
+    const online=fetch(req,{cache:"no-store"}).then(res=>{
+      if(res.ok)cache.put(cacheKey,res.clone());
+      return res;
+    });
+    if(!saved)return online.catch(()=>req.mode==="navigate"?cache.match("./index.html"):Response.error());
+    const deadline=new Promise(resolve=>setTimeout(()=>resolve(saved),3000));
+    return Promise.race([online.catch(()=>saved),deadline]);
   })());
 });

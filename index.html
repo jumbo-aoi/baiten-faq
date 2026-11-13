@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>売店お助けFAQ</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f3550">
+<meta name="apple-mobile-web-app-title" content="売店FAQ">
+<style>
+/* 上：港の案内板のような濃紺ヘッダー＋大きな検索窓 / 下：結果カードの一列リスト */
+:root{
+  --bg:#f3f6f8; --surface:#ffffff; --fg:#14222e; --muted:#5b6b78; --line:#d9e1e7;
+  --navy:#0f3550; --navy-fg:#ffffff; --accent:#e8582a; --accent-soft:#fde9e1;
+  --cust:#0b6fa4; --cust-soft:#e2f1f9; --staff:#5a6b16; --staff-soft:#eef3dc;
+  --warn:#9a5b00; --warn-soft:#fff3d6; --hl:#ffe58a;
+  --display:"M PLUS 1p","Hiragino Sans","Noto Sans JP",sans-serif;
+  --body:"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c151c; --surface:#14212b; --fg:#e6edf2; --muted:#9aabb8; --line:#26384a;
+  --navy:#0a2638; --navy-fg:#e6edf2; --accent:#ff7a4d; --accent-soft:#3a2219;
+  --cust:#5cb8e8; --cust-soft:#13303f; --staff:#b6cc5a; --staff-soft:#252d12;
+  --warn:#f2b54a; --warn-soft:#33270e; --hl:#6b5512; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c151c; --surface:#14212b; --fg:#e6edf2; --muted:#9aabb8; --line:#26384a;
+  --navy:#0a2638; --navy-fg:#e6edf2; --accent:#ff7a4d; --accent-soft:#3a2219;
+  --cust:#5cb8e8; --cust-soft:#13303f; --staff:#b6cc5a; --staff-soft:#252d12;
+  --warn:#f2b54a; --warn-soft:#33270e; --hl:#6b5512; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.7}
+.wrap{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{background:var(--navy);color:var(--navy-fg);position:sticky;top:env(safe-area-inset-top,0px);z-index:5;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--navy)}
+header .wrap{padding-block:14px 16px;display:flex;flex-direction:column;gap:10px}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.brand h1{font-family:var(--display);font-weight:800;font-size:1.35rem;margin:0;letter-spacing:.02em}
+.brand span{font-size:.8rem;opacity:.75}
+.search{position:relative}
+.search input{width:100%;font:inherit;font-size:1.15rem;padding:14px 48px 14px 16px;border-radius:12px;border:2px solid transparent;background:var(--surface);color:var(--fg);outline:none}
+.search input:focus{border-color:var(--accent)}
+.search button{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);font-size:1.4rem;cursor:pointer;padding:4px 8px}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font:inherit;font-size:.9rem;border:1.5px solid rgba(255,255,255,.35);background:transparent;color:var(--navy-fg);padding:5px 14px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--navy-fg);color:var(--navy);border-color:var(--navy-fg);font-weight:700}
+.chip:focus-visible,.btn:focus-visible,.card summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+main .wrap{padding-block:18px 60px;display:flex;flex-direction:column;gap:14px}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:.9rem}
+.btn{font:inherit;font-size:.9rem;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);padding:7px 14px;border-radius:9px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.danger{color:var(--accent);border-color:var(--accent)}
+.list{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.card summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;gap:12px;align-items:flex-start}
+.card summary::-webkit-details-marker{display:none}
+.tag{flex:none;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:6px;margin-top:3px;white-space:nowrap}
+.tag.customer{background:var(--cust-soft);color:var(--cust)}
+.tag.staff{background:var(--staff-soft);color:var(--staff)}
+.ttl{flex:1;min-width:0;font-family:var(--display);font-weight:700;font-size:1.05rem;line-height:1.5}
+.todo{flex:none;font-size:.72rem;font-weight:700;background:var(--warn-soft);color:var(--warn);padding:2px 8px;border-radius:6px;margin-top:3px}
+.body{padding:0 16px 16px;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:12px}
+.answer{white-space:pre-wrap;word-break:break-word;padding-top:12px}
+.answer.empty{color:var(--warn);background:var(--warn-soft);padding:12px;border-radius:8px;margin-top:12px;font-size:.92rem}
+.kws{display:flex;flex-wrap:wrap;gap:6px}
+.kws span{font-size:.75rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:1px 9px}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
+mark{background:var(--hl);color:inherit;border-radius:3px;padding:0 1px}
+.empty-state{background:var(--surface);border:1.5px dashed var(--line);border-radius:12px;padding:22px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:12px;align-items:center}
+.empty-state strong{color:var(--fg);font-size:1.05rem}
+form.edit{display:flex;flex-direction:column;gap:12px;padding:16px;background:var(--surface);border:2px solid var(--accent);border-radius:12px}
+form.edit label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;font-weight:700;color:var(--muted)}
+form.edit input,form.edit textarea,form.edit select{font:inherit;font-size:1rem;font-weight:400;color:var(--fg);background:var(--bg);border:1.5px solid var(--line);border-radius:8px;padding:9px 11px}
+form.edit textarea{min-height:170px;resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.note{font-size:.8rem;color:var(--muted);font-weight:400}
+.req{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.req span{min-width:0;word-break:break-word}
+h2{font-family:var(--display);font-size:1.05rem;margin:10px 0 0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:10px;font-size:.9rem;z-index:20}
+@media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s}.card:hover{border-color:var(--muted)}}
+.dirty{background:var(--warn-soft);color:var(--fg);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;font-size:.9rem}
+</style>
+<style>body{margin:0}[hidden]{display:none!important}</style>
+</head><body>
+<header>
+  <div class="wrap">
+    <div class="brand"><h1>売店お助けFAQ</h1><span>わからないことは、まずキーワードで検索</span></div>
+    <div class="search">
+      <input id="q" type="text" enterkeyhint="search" placeholder="例：返金、Wi-Fi、ペット、発券機、幼児…" autocomplete="off" aria-label="キーワード検索">
+      <button id="clear" type="button" aria-label="検索をクリア" hidden>×</button>
+    </div>
+    <div class="filters" role="group" aria-label="区分で絞り込み">
+      <button class="chip" data-cat="all" aria-pressed="true" type="button">すべて</button>
+      <button class="chip" data-cat="customer" aria-pressed="false" type="button">お客様対応</button>
+      <button class="chip" data-cat="staff" aria-pressed="false" type="button">スタッフ業務</button>
+      <button class="chip" data-cat="todo" aria-pressed="false" type="button">回答未記入</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="meta"><span id="count"></span><button class="btn primary" id="addBtn" type="button">＋ 新しい項目を追加</button></div>
+    <div id="dirty" class="dirty" hidden>
+      <span>この端末で編集した内容があります。他の端末にも反映するには、ファイルに保存して配り直してください。</span>
+      <div class="row"><button class="btn ghost" id="resetBtn" type="button">編集を取り消す</button><button class="btn primary" id="saveFileBtn" type="button">編集内容をファイルに保存</button></div>
+    </div>
+    <div id="editor"></div>
+    <div class="list" id="list"></div>
+  </div>
+</main>
+
+<script id="faq-data" type="application/json">[{"id": "c01", "cat": "customer", "title": "船内Wi-Fiの使い方・つながらない時", "keywords": ["Wi-Fi", "WiFi", "ワイファイ", "ワイハイ", "無線LAN", "フリーWi-Fi", "ネット", "インターネット", "パスワード", "SSID", "接続", "つながらない", "繋がらない", "電波", "スマホ", "充電"], "hint": "ネットワーク名（SSID）、パスワードの有無、接続手順、つながらない時の案内（航行中に電波が弱くなる区間など）", "answer": "", "yomi": "せんない むせんらん せつぞく つながらない でんぱ"}, {"id": "c02", "cat": "customer", "title": "オリーブバス1日乗車券（小豆島のバス乗り放題）について", "keywords": ["オリーブバス", "オリーブ", "1日乗車券", "一日乗車券", "1日券", "一日券", "フリー乗車券", "フリーパス", "乗り放題", "バス", "バス券", "小豆島", "切符", "チケット", "値段", "料金", "どこで使える"], "hint": "料金（大人・子供）、使える路線・期間、船内で買えるか、使い方（当日のみ有効など）", "answer": "", "yomi": "いちにちじょうしゃけん いちにちけん のりほうだい しょうどしま きっぷ りょうきん ねだん"}, {"id": "c03", "cat": "customer", "title": "軽食コーナーのアレルギー（原材料）について聞かれた時", "keywords": ["アレルギー", "アレルゲン", "原材料", "成分", "卵", "たまご", "乳", "牛乳", "小麦", "そば", "蕎麦", "えび", "エビ", "かに", "カニ", "落花生", "ピーナッツ", "うどん", "食べられない", "子供", "表示"], "hint": "アレルギー表示の場所（一覧表・メニューなど）、聞かれた時の答え方、断言してはいけないこと（同じ調理場で扱っている等）", "answer": "", "yomi": "あれるぎー げんざいりょう せいぶん たまご にゅう ぎゅうにゅう こむぎ そば えび かに らっかせい けいしょく"}, {"id": "c04", "cat": "customer", "title": "軽食コーナーの返品・返金・キャンセル・交換を頼まれた時", "keywords": ["返品", "返金", "キャンセル", "取り消し", "取消", "交換", "作り直し", "間違えた", "注文ミス", "間違って買った", "お金を返して", "いらなくなった", "クレーム", "苦情", "違う商品"], "hint": "原則お断りであることの伝え方（言い方の例）、例外になるケース（店側のミスなど）、誰に相談するか", "answer": "原則として、返品・返金・キャンセル・交換はお受けしていません。\n\n（お客様への伝え方の例・例外になるケース・相談先を記入してください）", "yomi": "へんぴん へんきん きゃんせる とりけし こうかん つくりなおし まちがえた くれーむ くじょう けいしょく"}, {"id": "c05", "cat": "customer", "title": "席を間違えているお客様・荷物だけ置いて席にいない時", "keywords": ["席間違い", "座席間違い", "席違い", "違う席", "座席", "指定席", "荷物", "置き荷物", "置きっぱなし", "場所取り", "席取り", "不在", "いない", "戻ってこない", "トラブル", "忘れ物"], "hint": "座席番号の確認方法、声のかけ方、荷物だけある場合の対応（触ってよいか・案内放送・誰に連絡するか）", "answer": "", "yomi": "せきまちがい ざせき していせき にもつ おきにもつ ばしょとり せきとり ふざい わすれもの"}, {"id": "c06", "cat": "customer", "title": "プレミア席を購入したのに決済完了画面が出ない時", "keywords": ["プレミア", "プレミアム", "プレミア席", "プレミアシート", "決済", "支払い", "購入", "完了画面", "完了しない", "出ない", "表示されない", "エラー", "買えない", "二重決済", "二重払い", "カード", "引き落とし"], "hint": "購入できているかの確認方法（メール・マイページ・システム）、二重購入を防ぐための声かけ、確認できない時の連絡先", "answer": "", "yomi": "ぷれみあ けっさい しはらい こうにゅう かんりょうがめん えらー にじゅうけっさい にじゅうばらい"}, {"id": "c07", "cat": "customer", "title": "のりば（乗り場・降り場）の案内", "keywords": ["のりば", "乗り場", "乗船口", "乗船場所", "降り場", "下船", "どこから乗る", "どこで降りる", "港", "ターミナル", "高松", "神戸", "小豆島", "坂手", "バス乗り場", "駐車場", "出口"], "hint": "各港ののりば・降り口、ターミナルからバス・駅への行き方、案内図の場所", "answer": "", "yomi": "のりば じょうせんぐち おりば げせん みなと たーみなる たかまつ こうべ しょうどしま さかて ちゅうしゃじょう でぐち"}, {"id": "c08", "cat": "customer", "title": "ペットケージを予約・購入済みのお客様への対応", "keywords": ["ペット", "犬", "いぬ", "猫", "ねこ", "動物", "ケージ", "ペットケージ", "ペットルーム", "ペット同伴", "預ける", "予約", "購入済み", "わんちゃん"], "hint": "予約の確認方法、ケージの場所・案内の手順、鍵や番号の渡し方、注意事項（エサ・散歩など）", "answer": "", "yomi": "ぺっと いぬ ねこ どうぶつ けーじ あずける よやく"}, {"id": "c09", "cat": "customer", "title": "QRコード（乗船券）の出し方を聞かれた時", "keywords": ["QR", "QRコード", "キューアール", "乗船券", "チケット", "eチケット", "電子チケット", "画面", "表示", "出し方", "出せない", "見つからない", "スマホ", "メール", "マイページ", "予約確認", "ログイン"], "hint": "QRコードが表示される場所（メール・マイページなど）と手順、出せない時の代わりの確認方法", "answer": "", "yomi": "じょうせんけん ちけっと がめん ひょうじ だしかた よやくかくにん"}, {"id": "s01", "cat": "staff", "title": "タブレットのWi-Fiの使い方・切り替え方", "keywords": ["タブレット", "iPad", "アイパッド", "端末", "Wi-Fi", "WiFi", "ワイファイ", "無線", "ネット", "切り替え", "切替", "つながらない", "繋がらない", "オフライン", "設定", "接続先"], "hint": "使うWi-Fiの名前、切り替えの手順（設定画面の操作）、つながらない時の確認ポイント", "answer": "", "yomi": "たぶれっと たんまつ むせん きりかえ せってい せつぞく"}, {"id": "s02", "cat": "staff", "title": "らくらく乗船システムの使い方", "keywords": ["らくらく", "楽々", "ラクラク", "らくらく乗船", "乗船システム", "システム", "予約確認", "予約検索", "照合", "受付", "チェックイン", "QR読み取り", "ログイン", "使い方"], "hint": "ログイン方法、予約の検索・確認のやり方、よく使う画面、困った時の連絡先", "answer": "", "yomi": "らくらくじょうせん じょうせんしすてむ よやくかくにん しょうごう うけつけ"}, {"id": "s03", "cat": "staff", "title": "席だけ販売する方法（幼児分）", "keywords": ["幼児", "子供", "子ども", "こども", "小児", "乳児", "赤ちゃん", "未就学", "席だけ", "座席のみ", "座席だけ", "座席販売", "席販売", "追加", "無料"], "hint": "対象年齢、料金、システムでの操作手順、お客様への説明のしかた", "answer": "", "yomi": "ようじ こども しょうに にゅうじ あかちゃん みしゅうがく せきだけ ざせき はんばい むりょう"}, {"id": "s04", "cat": "staff", "title": "サイネージ（案内画面）が止まった時の対応", "keywords": ["サイネージ", "デジタルサイネージ", "案内画面", "モニター", "テレビ", "画面", "止まった", "固まった", "フリーズ", "動かない", "映らない", "真っ暗", "消えた", "再起動", "電源"], "hint": "再起動の手順（電源の場所）、それでも直らない時の連絡先", "answer": "", "yomi": "さいねーじ あんないがめん もにたー とまった かたまった ふりーず うつらない まっくら さいきどう でんげん"}, {"id": "s05", "cat": "staff", "title": "QR発券機が動かなくなった時の対処", "keywords": ["QR発券機", "発券機", "券売機", "発券", "QR", "動かない", "止まった", "故障", "エラー", "紙詰まり", "用紙切れ", "ロール紙", "印刷できない", "出てこない", "再起動", "反応しない"], "hint": "よくある原因と直し方（紙詰まり・用紙切れ・再起動）、直らない時のお客様対応と連絡先", "answer": "", "yomi": "はっけんき けんばいき はっけん こしょう かみづまり ようしぎれ いんさつ さいきどう"}, {"id": "s06", "cat": "staff", "title": "発注のやり方", "keywords": ["発注", "注文", "仕入れ", "在庫", "補充", "納品", "欠品", "品切れ", "売り切れ", "締め切り", "発注書", "数量", "業者"], "hint": "発注する曜日・締め切り、発注方法（システム・FAX・電話など）、数量の決め方、納品時の確認", "answer": "", "yomi": "はっちゅう ちゅうもん しいれ ざいこ ほじゅう のうひん けっぴん しなぎれ うりきれ しめきり"}, {"id": "s07", "cat": "staff", "title": "オリーブバス1日乗車券の販売方法", "keywords": ["オリーブバス", "オリーブ", "1日乗車券", "一日乗車券", "1日券", "一日券", "バス券", "フリーパス", "販売", "売り方", "レジ", "精算", "在庫", "小豆島"], "hint": "レジでの打ち方、券の保管場所、在庫管理・精算の方法", "answer": "", "yomi": "いちにちじょうしゃけん いちにちけん ばすけん はんばい うりかた れじ せいさん ざいこ"}, {"id": "s08", "cat": "staff", "title": "4+S の販売手順", "keywords": ["4+S", "4＋S", "４＋Ｓ", "4S", "4プラスS", "よんぷらすえす", "フォープラスエス", "販売", "売り方", "手順"], "hint": "4+Sとは何か（商品・セットの内容）、レジ・システムでの販売手順、注意点", "answer": "", "yomi": "よんぷらすえす はんばい うりかた てじゅん"}, {"id": "s09", "cat": "staff", "title": "軽食コーナーの返品・返金・キャンセル・交換の処理方法（原則しない）", "keywords": ["返品", "返金", "キャンセル", "取り消し", "取消", "交換", "作り直し", "レジ取消", "返金処理", "赤伝", "マイナス", "注文ミス", "打ち間違い", "誤打"], "hint": "原則しないこと、例外で処理する場合のレジ操作手順、記録の残し方、誰の許可が必要か", "answer": "原則として、返品・返金・キャンセル・交換は行いません。\n\n（例外で処理する場合のレジ操作・記録の方法・許可を取る相手を記入してください）", "yomi": "へんぴん へんきん きゃんせる とりけし こうかん れじとりけし ごだ うちまちがい けいしょく"}, {"id": "s10", "cat": "staff", "title": "軽食コーナーの番号呼び出しモニターが落ちた時", "keywords": ["呼び出し", "呼出", "番号", "番号呼び出し", "呼び出しモニター", "番号表示", "モニター", "画面", "落ちた", "消えた", "映らない", "止まった", "固まった", "再起動", "軽食", "軽食コーナー"], "hint": "再起動の手順、直るまでの呼び出し方法（口頭・手書きなど）、連絡先", "answer": "", "yomi": "よびだし ばんごう もにたー おちた きえた うつらない さいきどう けいしょく"}]</script>
+<script>
+(function(){
+  const $=s=>document.querySelector(s);
+  const RAWDATA=document.getElementById("faq-data").textContent;let hsh=0;for(let i=0;i<RAWDATA.length;i++){hsh=(hsh*31+RAWDATA.charCodeAt(i))|0;}
+  const STORE="baiten-faq-edits-"+hsh;
+  const SEED=JSON.parse(document.getElementById("faq-data").textContent);
+  let items=SEED, cat="all", editingId=null, dirty=false;
+  try{const s=localStorage.getItem(STORE); if(s){items=JSON.parse(s); dirty=true;}}catch(e){}
+
+  // 検索用の正規化（全角半角・カタカナ/ひらがな・記号のゆれを吸収）
+  function norm(s){
+    return String(s||"").normalize("NFKC").toLowerCase()
+      .replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60))
+      .replace(/[\s・\-ー－_、。,.!?！？「」()（）\/／]/g,"");
+  }
+  function score(it,terms){
+    const t=norm(it.title), a=norm(it.answer), kws=(it.keywords||[]).concat(String(it.yomi||"").split(/\s+/)).map(norm);
+    let total=0;
+    for(const q of terms){
+      let s=0;
+      if(t.includes(q)) s+=5;
+      for(const k of kws){ if(!k) continue; if(k===q) s+=6; else if(k.includes(q)) s+=3; else if(q.length>=2&&k.length>=2&&q.includes(k)) s+=2; }
+      if(a.includes(q)) s+=1;
+      if(!s) return 0;
+      total+=s;
+    }
+    return total;
+  }
+  const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  function hl(text,raw){
+    let h=esc(text);
+    for(const w of raw.split(/\s+/).filter(Boolean)){
+      const re=new RegExp(esc(w).replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"gi");
+      h=h.replace(re,m=>"<mark>"+m+"</mark>");
+    }
+    return h;
+  }
+  const catLabel={customer:"お客様対応",staff:"スタッフ業務"};
+
+  function render(){
+    $("#dirty").hidden=!dirty;
+    const raw=$("#q").value.trim();
+    $("#clear").hidden=!raw;
+    const terms=raw.split(/\s+/).map(norm).filter(Boolean);
+    let rows=items.filter(it=>cat==="all"||(cat==="todo"?!(it.answer||"").trim():it.cat===cat));
+    if(terms.length) rows=rows.map(it=>({it,s:score(it,terms)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).map(x=>x.it);
+    $("#count").textContent=terms.length?`「${raw}」の検索結果：${rows.length}件`:`全${rows.length}件`;
+    const list=$("#list");
+    if(!rows.length){
+      list.innerHTML=`<div class="empty-state"><strong>${terms.length?"該当する項目が見つかりませんでした":"この区分の項目はありません"}</strong>
+        <span>別の言い方（例：「返金」→「お金」「キャンセル」）でも試してみてください。<br>それでも無い場合は、聞かれた内容を売店リーダーに伝えて、項目を追加してもらいましょう。</span></div>`;
+      return;
+    }
+    const open=terms.length&&rows.length<=3;
+    list.innerHTML=rows.map(it=>{
+      const empty=!(it.answer||"").trim();
+      return `<details class="card" ${open?"open":""}>
+        <summary><span class="tag ${it.cat}">${catLabel[it.cat]||"その他"}</span><span class="ttl">${hl(it.title,raw)}</span>${empty?'<span class="todo">回答未記入</span>':""}</summary>
+        <div class="body">
+          ${empty?`<div class="answer empty">まだ回答が書かれていません。わかる人に確認してください。${it.hint?"\n\n書く内容の例："+esc(it.hint):""}</div>`:`<div class="answer">${hl(it.answer,raw)}</div>`}
+          <div class="kws">${(it.keywords||[]).map(k=>`<span>${esc(k)}</span>`).join("")}</div>
+          <div class="foot"><span>${it.updatedAt?"最終更新："+esc(it.updatedAt):""}</span><button class="btn" type="button" data-edit="${esc(it.id)}">編集</button></div>
+        </div></details>`;
+    }).join("");
+    list.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openEditor(b.dataset.edit));
+  }
+
+  function persist(){
+    dirty=true;
+    try{localStorage.setItem(STORE,JSON.stringify(items));}catch(e){toast("この端末には一時保存できません。ファイルに保存してください。");}
+    render();
+  }
+  function openEditor(id){
+    editingId=id||null;
+    const it=items.find(x=>x.id===id)||{cat:"customer",title:"",keywords:[],answer:"",hint:""};
+    $("#editor").innerHTML=`<form class="edit" id="ef">
+      <strong>${id?"項目を編集":"新しい項目を追加"}</strong>
+      <label>区分<select id="f-cat"><option value="customer">お客様対応</option><option value="staff">スタッフ業務</option></select></label>
+      <label>タイトル<input id="f-title" value="${esc(it.title)}" placeholder="例：レシートの再発行はできますか"></label>
+      <label>キーワード<span class="note">カンマ（,）か「、」で区切って入力。言い換え・略語・ひらがなも入れると検索に引っかかりやすくなります。</span>
+        <input id="f-kw" value="${esc((it.keywords||[]).join(", "))}" placeholder="例：レシート, 領収書, 再発行, もう一回"></label>
+      <label>回答・手順<textarea id="f-ans" placeholder="${esc(it.hint?"書く内容の例："+it.hint:"手順は 1. 2. 3. と番号をつけると読みやすくなります")}">${esc(it.answer||"")}</textarea></label>
+      <div class="row">${id?'<button class="btn danger" type="button" id="f-del">削除</button>':""}<span style="flex:1"></span><button class="btn" type="button" id="f-cancel">キャンセル</button><button class="btn primary" type="submit">保存</button></div>
+    </form>`;
+    $("#f-cat").value=it.cat||"customer";
+    $("#f-cancel").onclick=closeEditor;
+    if(id){let armed=false;$("#f-del").onclick=e=>{
+      if(!armed){armed=true;e.target.textContent="本当に削除する";return;}
+      items=items.filter(x=>x.id!==id);closeEditor();persist();toast("削除しました");
+    };}
+    $("#ef").onsubmit=e=>{
+      e.preventDefault();
+      const d=new Date();
+      const data={cat:$("#f-cat").value,title:$("#f-title").value.trim(),
+        keywords:$("#f-kw").value.split(/[,、，]/).map(s=>s.trim()).filter(Boolean),
+        answer:$("#f-ans").value.trim(),updatedAt:`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`};
+      if(!data.title){toast("タイトルを入力してください");return;}
+      if(editingId) items=items.map(x=>x.id===editingId?{...x,...data}:x);
+      else items=[...items,{id:"n"+Date.now(),hint:"",...data}];
+      closeEditor();persist();toast("保存しました（この端末）");
+    };
+    $("#editor").scrollIntoView({behavior:"smooth",block:"start"});
+    $("#f-title").focus();
+  }
+  function closeEditor(){$("#editor").innerHTML="";editingId=null;}
+
+  // 編集内容を埋め込んだ新しいHTMLファイルを作る
+  $("#saveFileBtn").onclick=()=>{
+    const html="<!DOCTYPE html>\n"+document.documentElement.outerHTML
+      .replace(/(<script id="faq-data" type="application\/json">)[\s\S]*?(<\/script>)/,(m,a,b)=>a+JSON.stringify(items).replace(/</g,"\\u003c")+b)
+      .replace(/<div class="toast"[\s\S]*?<\/div>/,"");
+    // 保存したファイルは編集状態を持たない状態で書き出す
+    const blob=new Blob([html],{type:"text/html"});
+    const a=document.createElement("a");const d=new Date();
+    a.href=URL.createObjectURL(blob);
+    a.download=`売店お助けFAQ_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}.html`;
+    document.body.appendChild(a);a.click();a.remove();
+    toast("ファイルを保存しました。他の端末に配ってください。");
+  };
+  let armedReset=false;
+  $("#resetBtn").onclick=e=>{
+    if(!armedReset){armedReset=true;e.target.textContent="本当に取り消す";return;}
+    try{localStorage.removeItem(STORE);}catch(err){}
+    items=SEED;dirty=false;armedReset=false;e.target.textContent="編集を取り消す";render();toast("ファイルの内容に戻しました");
+  };
+
+  let tt;function toast(m){let t=$(".toast");if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t);}t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2800);}
+
+  $("#q").addEventListener("input",render);
+  $("#clear").onclick=()=>{$("#q").value="";render();$("#q").focus();};
+  document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
+    cat=c.dataset.cat;document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",String(x===c)));render();
+  });
+  $("#addBtn").onclick=()=>openEditor(null);
+  render();
+})();
+</script>
+
+<script>
+if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}
+</script>
+</body></html>
